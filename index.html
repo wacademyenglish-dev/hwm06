@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HW | The Executive Interview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-void: #050505;
+            --bg-panel: #111111;
+            --accent-brand: #D4AF37; /* Executive Gold */
+            --accent-success: #2A9D8F;
+            --accent-alert: #E63946;
+            --text-main: #E0E0E0;
+        }
+        body {
+            background-color: var(--bg-void);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            justify-content: center;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100dvh;
+            background-color: var(--bg-panel);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.1);
+        }
+        h1, h2 { font-family: 'Playfair Display', serif; }
+        
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
+        }
+        .screen.hidden-right { transform: translateX(100%); opacity: 0; pointer-events: none; }
+        .screen.hidden-left { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+        .screen.active { transform: translateX(0); opacity: 1; pointer-events: auto; }
+
+        .btn-brand {
+            background: linear-gradient(135deg, var(--accent-brand), #B8860B);
+            color: #000; font-family: 'Inter', sans-serif; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 2px; border-radius: 4px;
+            transition: transform 0.1s; border: none;
+        }
+        .btn-brand:active { transform: scale(0.95); }
+
+        .option-btn {
+            background-color: var(--bg-void); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px; padding: 20px; text-align: left; font-weight: 500;
+            transition: all 0.2s; position: relative; overflow: hidden;
+        }
+        .option-btn:active { transform: scale(0.98); }
+        .option-btn.correct { background-color: rgba(212, 175, 55, 0.1); border-left: 4px solid var(--accent-brand); color: var(--accent-brand); }
+        .option-btn.wrong { background-color: rgba(230, 57, 70, 0.1); border-left: 4px solid var(--accent-alert); color: var(--accent-alert); }
+        
+        .progress-bar-bg { background: rgba(255,255,255,0.05); height: 4px; border-radius: 2px; overflow: hidden; width: 100%; }
+        .progress-bar-fill { background: var(--accent-brand); height: 100%; width: 0%; transition: width 0.3s ease; }
+
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(3px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div id="screen-start" class="screen active p-8 items-center justify-center text-center">
+        <div class="w-24 h-24 rounded-full bg-[var(--bg-void)] border border-[var(--accent-brand)] flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
+            <i class="fas fa-user-tie text-4xl text-[var(--accent-brand)]"></i>
+        </div>
+        <p class="text-[var(--accent-brand)] font-bold text-xs tracking-widest uppercase mb-4">Level B2 Executive</p>
+        <h1 class="text-4xl font-black text-white leading-tight mb-4">The Executive Interview</h1>
+        <p class="text-gray-400 font-light mb-12">15 scenarios testing Passive Voice for distancing, Advanced Connectors, and Leadership Tactics.</p>
+        <button onclick="startQuiz()" class="btn-brand w-full py-5 text-sm shadow-lg">Enter Boardroom</button>
+    </div>
+
+    <div id="screen-quiz" class="screen hidden-right flex flex-col pt-8 pb-6 px-6">
+        <div class="flex items-center justify-between mb-4">
+            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest" id="q-counter">Q 1/15</span>
+            <div class="flex gap-2 text-sm font-bold">
+                <span class="text-[var(--accent-brand)]"><i class="fas fa-check mr-1"></i><span id="score-val">0</span></span>
+            </div>
+        </div>
+        <div class="progress-bar-bg mb-8"><div class="progress-bar-fill" id="progress"></div></div>
+        
+        <div class="flex-grow flex flex-col">
+            <span class="text-[9px] font-bold text-[var(--accent-brand)] uppercase tracking-widest mb-3" id="q-category">Grammar Check</span>
+            <h2 class="text-2xl font-black text-white leading-snug mb-8" id="q-text">Loading question...</h2>
+            
+            <div class="flex flex-col gap-4 mt-auto mb-8" id="options-container">
+                <!-- Options injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-wrap" class="screen hidden-right p-8 items-center justify-center text-center">
+        <div class="w-32 h-32 rounded-full border-2 border-[var(--accent-brand)] flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(212,175,55,0.2)] bg-[var(--bg-void)]">
+            <h1 class="text-5xl font-black text-[var(--accent-brand)]" id="final-score">15/15</h1>
+        </div>
+        <h2 class="text-3xl font-black text-white mb-4">Offer Accepted</h2>
+        <p class="text-gray-400 font-light mb-12" id="final-message">You have successfully demonstrated executive presence and controlled the narrative.</p>
+        <button onclick="location.reload()" class="btn-brand w-full py-5 text-sm shadow-lg mb-4">Exit Building</button>
+    </div>
+
+</div>
+
+<script>
+    const questions = [
+        { category: "Passive Voice", q: "Change to executive distancing: 'I made mistakes during the project.'", opts: ["Mistakes was made during the project.", "Mistakes were made during the project.", "The project was a mistake by me."], ans: 1 },
+        { category: "Passive Voice", q: "To sound objective, which sentence is better?", opts: ["We experienced a delay in delivery.", "A delay was experienced in delivery.", "We delayed the delivery."], ans: 1 },
+        { category: "Connectors", q: "_____ the drop in sales, we kept all our employees.", opts: ["Although", "However", "Despite"], ans: 2 },
+        { category: "Connectors", q: "I have no tech background; _____, my leadership skills are excellent.", opts: ["despite", "nevertheless", "although"], ans: 1 },
+        { category: "Passive Voice", q: "How do you distance yourself from: 'We lost the main client'?", opts: ["The client was lost due to miscommunication.", "The client has lost us.", "We were lost by the client."], ans: 0 },
+        { category: "Non-verbal", q: "According to interview tactics, maintaining stillness projects:", opts: ["Nervousness", "Arrogance", "Power and control"], ans: 2 },
+        { category: "Interview Strategy", q: "When asked about a failure, the best approach is to:", opts: ["Blame your previous team.", "Admit it objectively and pivot to the solution.", "Deny that you ever fail."], ans: 1 },
+        { category: "Connectors", q: "_____ we faced budget cuts, we successfully launched the app.", opts: ["Despite", "Nevertheless", "Even though"], ans: 2 },
+        { category: "Inversions", q: "Choose the correct inversion: 'I not only passed the audit, but I also...'", opts: ["Not only I passed the audit, but...", "Not only did I pass the audit, but...", "Did not only I pass the audit, but..."], ans: 1 },
+        { category: "Inversions", q: "Which structure sounds most formal and executive?", opts: ["Had we known about the issue, we would have fixed it.", "If we knew about the issue, we would fix it.", "If we had known about the issue, we fixed it."], ans: 0 },
+        { category: "P.R. Spin", q: "Reframe: 'I hate public speaking.'", opts: ["Public speaking is my biggest weakness.", "I am terrible at public speaking.", "I struggle with public speaking; nevertheless, I am taking a course."], ans: 2 },
+        { category: "Connectors", q: "The market was tough. _____, our profit increased by 10%.", opts: ["Despite", "Yet", "Although"], ans: 1 },
+        { category: "Interview Strategy", q: "What should you ask at the end of a C-Suite interview?", opts: ["Questions about vacation days.", "Nothing, to save time.", "Questions about the company's 5-year strategic vision."], ans: 2 },
+        { category: "Passive Voice", q: "Find the passive structure:", opts: ["They implemented new rules.", "New rules have been implemented.", "We are implementing new rules."], ans: 1 },
+        { category: "Behavioral", q: "In the STAR method, what comes after Situation and Task?", opts: ["Action", "Attitude", "Analysis"], ans: 0 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let isAnimating = false;
+
+    function startQuiz() {
+        document.getElementById('screen-start').classList.remove('active');
+        document.getElementById('screen-start').classList.add('hidden-left');
+        document.getElementById('screen-quiz').classList.remove('hidden-right');
+        document.getElementById('screen-quiz').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentQ >= questions.length) { showWrap(); return; }
+        
+        isAnimating = false;
+        const q = questions[currentQ];
+        document.getElementById('q-counter').innerText = `Q ${currentQ + 1}/${questions.length}`;
+        document.getElementById('progress').style.width = `${((currentQ) / questions.length) * 100}%`;
+        document.getElementById('q-category').innerText = q.category;
+        document.getElementById('q-text').innerText = q.q;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.opts.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opacity-50 mr-3 text-xs font-bold">${String.fromCharCode(65+index)}</span> ${opt}`;
+            btn.onclick = () => checkAnswer(index, btn);
+            container.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIndex, btn) {
+        if (isAnimating) return;
+        isAnimating = true;
+        
+        const q = questions[currentQ];
+        const allBtns = document.getElementById('options-container').children;
+        
+        if (selectedIndex === q.ans) {
+            btn.classList.add('correct');
+            score++;
+            document.getElementById('score-val').innerText = score;
+        } else {
+            btn.classList.add('wrong', 'shake');
+            if (navigator.vibrate) navigator.vibrate(200);
+            allBtns[q.ans].classList.add('correct');
+        }
+
+        setTimeout(() => {
+            currentQ++;
+            document.getElementById('progress').style.width = `${((currentQ) / questions.length) * 100}%`;
+            setTimeout(loadQuestion, 200);
+        }, 1500);
+    }
+
+    function showWrap() {
+        document.getElementById('screen-quiz').classList.remove('active');
+        document.getElementById('screen-quiz').classList.add('hidden-left');
+        document.getElementById('screen-wrap').classList.remove('hidden-right');
+        document.getElementById('screen-wrap').classList.add('active');
+        
+        document.getElementById('final-score').innerText = `${score}/${questions.length}`;
+        const msg = document.getElementById('final-message');
+        if (score === 15) msg.innerText = "Flawless performance. You control the narrative perfectly.";
+        else if (score >= 10) msg.innerText = "Strong executive presence. A quick review and you'll be unstoppable.";
+        else msg.innerText = "Review the Passive Voice and Connectors to avoid sounding defensive.";
+    }
+</script>
+</body>
+</html>
